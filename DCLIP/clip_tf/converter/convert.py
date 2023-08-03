@@ -1,3 +1,20 @@
+    """_summary_
+定义了CLIP各个模型的下载链接,用于后续获取PyTorch模型。
+定义了示例图像链接和文本选项,用于验证转换后的Keras模型。
+定义了一系列工具函数,包括下载PyTorch模型、加载模型参数、验证模型等。
+convert函数是主要的转换函数,它会:
+下载PyTorch模型
+构建Keras模型,并加载PyTorch参数
+验证转换后的Keras模型
+保存Keras模型
+可选的单独导出图像/文本编码器
+定义了Base64DecoderLayer,用于处理base64编码的图像输入。
+支持将图像编码器改写为支持base64字符串作为输入,方便部署。
+支持从自定义训练得到的PyTorch模型进行转换。
+转换后的Keras模型支持保存为SavedModel格式,方便部署服务。
+"""
+
+
 import gc
 import hashlib
 import os
@@ -23,6 +40,7 @@ from clip_tf.model import build_model
 
 LOGGER = logging.Logger(__name__)
 
+# MODELS字典,包含了各个CLIP模型的下载链接
 MODELS = {
     "RN50": "https://openaipublic.azureedge.net/clip/models/afeb0e10f9e5a86da6080e35cf09123aca3b358a0c3e3b6c78a7b63bc04b6762/RN50.pt",
     "RN101": "https://openaipublic.azureedge.net/clip/models/8fa8567bab74a42d41c5915025a8e4538c3bdbe8804a470a72f30b0d94fab599/RN101.pt",
@@ -35,7 +53,7 @@ MODELS = {
     "ViT-L/14@336px": "https://openaipublic.azureedge.net/clip/models/3035c92b350959924f9f00213499208652fc7ea050643e8b385c2dac08641f02/ViT-L-14-336px.pt"
 }
 
-# model input for verification
+# 定义了image_url和text_options,用于模型验证
 image_url = "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fblog%2F202108%2F04%2F20210804120908_96d67.thumb.1000_0.jpg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1686040729&t=779493f29cb3adc4fe84511d33e61d93"
 text_options = ["a diagram", "a dog", "a cat", "a neural network"]
 
@@ -333,6 +351,7 @@ def build_clip_text(model):
     clip_img = keras.Model(inputs=inputs, outputs=x)
     return clip_img
 
+# 下载PyTorch模型
 def download_statedict(url: str, root: str = os.path.expanduser("~/.cache/clip")):
     os.makedirs(root, exist_ok=True)
     filename = os.path.basename(url)
@@ -371,6 +390,7 @@ def download_statedict(url: str, root: str = os.path.expanduser("~/.cache/clip")
     return state_dict
 
 
+# 加载PyTorch权重到Keras模型
 def load_pytorch_weights(model: keras.Model, state_dict: dict, verbose=False):
     tf_dict = {v.name.replace('.', '/'): v for v in model.weights}
 
